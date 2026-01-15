@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Classification Challenge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📧 Desafio de Classificação de Emails</h1>
+            <p>Automatize a classificação de emails para operações financeiras</p>
+        </header>
+
+        <main>
+            <div class="grid">
+                <section class="input-section">
+                    <h2>📥 Email de Entrada</h2>
+
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="switchTab('text')">Texto</button>
+                        <button class="tab-btn" onclick="switchTab('file')">Upload de Arquivo</button>
+                    </div>
+
+                    <form action="/analyze" method="POST" enctype="multipart/form-data" id="analysisForm">
+                        <div id="text-input" class="tab-content active">
+                            <div class="form-group">
+                                <label for="email_subject"
+                                    style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Assunto do
+                                    Email</label>
+                                <input type="text" id="email_subject" name="email_subject"
+                                    placeholder="Ex: Urgente - Fatura em atraso"
+                                    value="{{ email_subject if email_subject else '' }}"
+                                    style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e0; border-radius: 8px; margin-bottom: 1rem;">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email_text"
+                                    style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Corpo do
+                                    Email</label>
+                                <textarea id="email_text" name="email_text"
+                                    placeholder="Cole o conteúdo do email aqui..."
+                                    rows="12">{{ email_body if email_body else '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div id="file-input" class="tab-content">
+                            <div class="file-drop-area">
+                                <span class="file-msg">Arraste e solte ou clique para enviar (.txt, .pdf)</span>
+                                <input class="file-input" type="file" name="file" accept=".txt,.pdf">
+                            </div>
+                        </div>
+
+
+
+                        <button type="submit" class="analyze-btn">🔍 Analisar Email</button>
+                    </form>
+                </section>
+
+                <section class="results-section">
+                    <h2>📊 Resultados da Análise</h2>
+
+                    {% if result %}
+
+                    {% if result.get('is_fraud') %}
+                    <div class="fraud-alert">
+                        <h3>🚨 ALERTA DE FRAUDE DETECTADO 🚨</h3>
+                        <p><strong>Este email apresenta sinais de PHISHING/GOLPE!</strong></p>
+                        <ul>
+                            {% for indicator in result.get('fraud_indicators', []) %}
+                            <li>⚠️ {{ indicator }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <div
+                        class="result-card {{ 'fraud' if result.get('is_fraud') else ('productive' if result['classification'] == 'Produtivo' else 'unproductive') }}">
+                        <div class="result-header">
+                            <h3>{{ '🚨' if result.get('is_fraud') else ('✅' if result['classification'] == 'Produtivo'
+                                else '❌') }} {{
+                                result['classification'] }}</h3>
+                            <span class="confidence">Confiança: {{ "%.0f"|format(result['confidence'] * 100) }}%</span>
+                        </div>
+                        <p class="mode-badge">Modo: {{ result['mode'] }}</p>
+                    </div>
+
+                    <div class="analysis-details">
+                        <h4>📝 Justificativa da Análise</h4>
+                        <div class="info-box">
+                            {{ result['reasoning'] }}
+                        </div>
+
+                        <h4>💬 Resposta Sugerida</h4>
+                        <div class="success-box">
+                            {{ result['suggested_response'] }}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>👈 Insira um email e clique em 'Analisar Email' para ver os resultados.</p>
+                    </div>
+                    {% endif %}
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <p>Desafio de Classificação de Emails | Construído com Flask & HTML5</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner-box">
+            <div class="spinner"></div>
+            <h3>Analisando seu email...</h3>
+            <p>A inteligência artificial está processando o contexto.</p>
+        </div>
+    </div>
+
+    <script>
+        // Form Loading Logic
+        const form = document.getElementById('analysisForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        if (form) {
+            form.addEventListener('submit', function () {
+                // Show loading overlay immediately when form is submitted
+                loadingOverlay.classList.remove('hidden');
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            if (tabName === 'text') {
+                document.getElementById('text-input').classList.add('active');
+                document.querySelector('.tab-btn:first-child').classList.add('active');
+            } else {
+                document.getElementById('file-input').classList.add('active');
+                document.querySelector('.tab-btn:last-child').classList.add('active');
+            }
+        }
+
+        // Simple file input feedback
+        const fileInput = document.querySelector('.file-input');
+        const fileMsg = document.querySelector('.file-msg');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    fileMsg.textContent = "Selecionado: " + e.target.files[0].name;
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
