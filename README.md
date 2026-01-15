@@ -116,7 +116,6 @@ email-classification-app/
 ├── static/
 │   └── style.css       # Estilos CSS
 ├── requirements.txt    # Dependências Python
-├── vercel.json         # Configuração de deploy Vercel
 ├── .gitignore          # Arquivos ignorados pelo Git
 ├── .env                # Variáveis de ambiente (não commitado)
 └── README.md           # Este arquivo
