@@ -21,7 +21,7 @@ Sistema inteligente de classificação de emails para operações financeiras, c
 - **Backend**: Python 3.11+ / Flask 3.0
 - **Frontend**: HTML5, CSS3, JavaScript
 - **IA**: OpenRouter API (Google Gemini 2.0 Flash)
-- **Deploy**: Render.com / Gunicorn
+- **Deploy**: Vercel
 
 ---
 
@@ -116,7 +116,7 @@ email-classification-app/
 ├── static/
 │   └── style.css       # Estilos CSS
 ├── requirements.txt    # Dependências Python
-├── Procfile            # Configuração de deploy
+├── vercel.json         # Configuração de deploy Vercel
 ├── .gitignore          # Arquivos ignorados pelo Git
 ├── .env                # Variáveis de ambiente (não commitado)
 └── README.md           # Este arquivo
@@ -126,18 +126,15 @@ email-classification-app/
 
 ## ☁️ Deploy em Produção
 
-### Render.com (Recomendado)
+### Vercel (Recomendado)
 
 1. Faça push do código para o GitHub
-2. Acesse [render.com](https://render.com) e conecte seu GitHub
-3. Crie um novo **Web Service**
-4. Configure:
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn app:app`
-5. Adicione a variável de ambiente `OPENROUTER_API_KEY`
-6. Clique em **Create Web Service**
+2. Acesse [vercel.com](https://vercel.com) e conecte seu GitHub
+3. Importe o repositório
+4. Configure a variável de ambiente `OPENROUTER_API_KEY` em Settings > Environment Variables
+5. Clique em **Deploy**
 
-Seu app estará disponível em: `https://seu-app.onrender.com`
+Seu app estará disponível em: `https://seu-app.vercel.app`
 
 ---
 
