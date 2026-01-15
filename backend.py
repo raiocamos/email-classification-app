@@ -69,7 +69,8 @@ def classify_with_keywords(email_content: str) -> Tuple[str, float, str]:
     total_keywords = productive_score + unproductive_score
     
     if total_keywords == 0:
-        return "Produtivo", 0.5, "Nenhuma palavra-chave específica encontrada. Padrão definido como produtivo para revisão manual."
+        # Default to Improdutivo - emails without clear action indicators don't need response
+        return "Improdutivo", 0.6, "Nenhuma palavra-chave de ação encontrada. Email classificado como improdutivo (não requer resposta)."
     
     if productive_score > unproductive_score:
         confidence = min(0.95, 0.5 + (productive_score - unproductive_score) * 0.1)
@@ -78,7 +79,7 @@ def classify_with_keywords(email_content: str) -> Tuple[str, float, str]:
         confidence = min(0.95, 0.5 + (unproductive_score - productive_score) * 0.1)
         return "Improdutivo", confidence, f"Encontradas {unproductive_score} palavras-chave improdutivas vs {productive_score} palavras-chave produtivas."
     else:
-        return "Produtivo", 0.5, "Correspondência igual de palavras-chave. Padrão definido como produtivo para revisão manual."
+        return "Improdutivo", 0.5, "Correspondência igual de palavras-chave. Classificado como improdutivo por padrão."
 
 
 def generate_keyword_response(email_content: str) -> str:
@@ -117,23 +118,31 @@ def classify_with_ai(email_content: str, api_key: str) -> Tuple[str, float, str]
             messages=[
                 {
                     "role": "system",
-                    "content": """Você é um assistente de classificação de emails e segurança para uma empresa financeira.
+                    "content": """Você é um assistente de classificação de emails para uma empresa financeira.
                     
-                    SUA MISSÃO:
-                    1. Classificar como 'Produtivo' (requer ação) ou 'Improdutivo'.
+                    CLASSIFICAÇÃO:
                     
-                    REGRAS CRÍTICAS:
-                    - FRAUDE/PHISHING É SEMPRE 'Produtivo'. Motivo: Requer ação imediata de denúncia à segurança.
+                    **PRODUTIVO** = Email que REQUER UMA RESPOSTA ou AÇÃO IMEDIATA do destinatário:
+                    - Solicitações diretas (reuniões, orçamentos, prazos)
+                    - Perguntas que precisam ser respondidas
+                    - Pedidos de aprovação ou decisão
+                    - Demandas de clientes ou parceiros
+                    - FRAUDE/PHISHING (requer ação de denúncia à segurança)
                     
-                    Ao analisar, procure por:
-                    - Senso de urgência injustificado.
-                    - Erros gramaticais ou de formatação suspeitos.
-                    - Solicitações financeiras incomuns ou links estranhos.
-                    - Remetentes que não condizem com o contexto.
+                    **IMPRODUTIVO** = Email que NÃO requer resposta nem ação:
+                    - Newsletters e informativos
+                    - Marketing e promoções
+                    - Notificações automáticas (confirmações de compra, atualizações de sistema)
+                    - Spam e propagandas
+                    - Emails apenas informativos sem pedido de ação
+                    - Comunicados gerais que são só para leitura
+                    
+                    REGRA DE OURO: Se o email não espera uma resposta sua, é IMPRODUTIVO.
 
-                    Responda no formato: CLASSIFICAÇÃO|CONFIANÇA|JUSTIFICATIVA
+                    Responda EXATAMENTE no formato: CLASSIFICAÇÃO|CONFIANÇA|JUSTIFICATIVA
                     
-                    Na JUSTIFICATIVA: Se for fraude, inicie com "ALERTA DE SEGURANÇA:". Detalhe os sinais encontrados."""
+                    Exemplo Produtivo: Produtivo|0.9|O cliente solicita orçamento para serviço, requer resposta.
+                    Exemplo Improdutivo: Improdutivo|0.85|Newsletter informativa, não requer resposta nem ação."""
                 },
                 {
                     "role": "user",
