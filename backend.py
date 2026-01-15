@@ -22,7 +22,6 @@ UNPRODUCTIVE_KEYWORDS = [
     "parabéns", "ganhador", "loteria", "inscrever", "marketing"
 ]
 
-# Fraud/Phishing detection keywords
 FRAUD_KEYWORDS = [
     "será bloqueada", "será bloqueado", "bloqueio permanente", "suspensa",
     "clique no link", "clique aqui", "atualize seus dados", "verifique sua identidade",
@@ -34,7 +33,6 @@ FRAUD_KEYWORDS = [
 
 
 def detect_fraud(email_content: str) -> Tuple[bool, list]:
-    """Check for fraud indicators in email content."""
     content_lower = email_content.lower()
     found_indicators = []
     
@@ -42,11 +40,10 @@ def detect_fraud(email_content: str) -> Tuple[bool, list]:
         if indicator.lower() in content_lower:
             found_indicators.append(indicator)
     
-    # Also check for suspicious patterns
     if re.search(r'http[s]?://[^\s]*\.(xyz|ru|tk|ml|ga|cf)', content_lower):
         found_indicators.append("Link suspeito detectado")
     
-    is_fraud = len(found_indicators) >= 2  # At least 2 indicators = likely fraud
+    is_fraud = len(found_indicators) >= 2
     return is_fraud, found_indicators
 
 PRODUCTIVE_RESPONSES = {
@@ -69,7 +66,6 @@ def classify_with_keywords(email_content: str) -> Tuple[str, float, str]:
     total_keywords = productive_score + unproductive_score
     
     if total_keywords == 0:
-        # Default to Improdutivo - emails without clear action indicators don't need response
         return "Improdutivo", 0.6, "Nenhuma palavra-chave de ação encontrada. Email classificado como improdutivo (não requer resposta)."
     
     if productive_score > unproductive_score:
@@ -85,19 +81,12 @@ def classify_with_keywords(email_content: str) -> Tuple[str, float, str]:
 def generate_keyword_response(email_content: str) -> str:
     content_lower = email_content.lower()
     
-    for keyword, response in PRODUCTIVE_RESPONSES.items():
-        # Note: mapping English keys to Portuguese keywords in text might need adjustment
-        # For simplicity, we check if the translated keywords list contains terms that map to these keys,
-        # OR we just check a few hardcoded translations for the 'key' concept.
-        # Ideally, we map specific Portuguese words to these response types.
-        
-        # Simple mapping for 'meeting' -> 'reunião' etc.
-        if keyword == "meeting" and "reunião" in content_lower: return response
-        if keyword == "invoice" and "fatura" in content_lower: return response
-        if keyword == "deadline" and "prazo" in content_lower: return response
-        if keyword == "proposal" and "proposta" in content_lower: return response
-        if keyword == "urgent" and "urgente" in content_lower: return response
-        if keyword == "approval" and "aprovação" in content_lower: return response
+    if "reunião" in content_lower: return PRODUCTIVE_RESPONSES["meeting"]
+    if "fatura" in content_lower: return PRODUCTIVE_RESPONSES["invoice"]
+    if "prazo" in content_lower: return PRODUCTIVE_RESPONSES["deadline"]
+    if "proposta" in content_lower: return PRODUCTIVE_RESPONSES["proposal"]
+    if "urgente" in content_lower: return PRODUCTIVE_RESPONSES["urgent"]
+    if "aprovação" in content_lower: return PRODUCTIVE_RESPONSES["approval"]
             
     return PRODUCTIVE_RESPONSES["default"]
 
@@ -107,7 +96,6 @@ def classify_with_ai(email_content: str, api_key: str) -> Tuple[str, float, str]
         return classify_with_keywords(email_content)
     
     try:
-        # Use OpenRouter configuration
         client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=api_key,
@@ -172,7 +160,6 @@ def classify_with_ai(email_content: str, api_key: str) -> Tuple[str, float, str]
 
 
 def generate_ai_response(email_content: str, classification: str, reasoning: str, api_key: str) -> str:
-    # CRITICAL: Check for fraud FIRST based on the reasoning from classification
     fraud_keywords = ["fraude", "phishing", "golpe", "alerta de segurança", "suspeito", "spam", "malicioso"]
     reasoning_lower = reasoning.lower()
     
@@ -223,13 +210,10 @@ def generate_ai_response(email_content: str, classification: str, reasoning: str
 
 
 def classify_email(email_content: str, api_key: str = None) -> dict:
-    # Use provided key or fallback to environment variable
     final_api_key = api_key if api_key and len(api_key) > 10 else os.getenv("OPENROUTER_API_KEY")
     
-    # ALWAYS run fraud detection first
     is_fraud, fraud_indicators = detect_fraud(email_content)
     
-    # Check if we have a valid key
     is_ai_mode = final_api_key and len(final_api_key) > 10
     
     if is_ai_mode:
@@ -242,9 +226,8 @@ def classify_email(email_content: str, api_key: str = None) -> dict:
         else:
             suggested_response = "Nenhuma resposta necessária para emails improdutivos."
     
-    # OVERRIDE if fraud detected
     if is_fraud:
-        classification = "Produtivo"  # Needs action: report!
+        classification = "Produtivo"
         reasoning = f"⚠️ ALERTA DE SEGURANÇA: Detectados {len(fraud_indicators)} indicadores de fraude/phishing: {', '.join(fraud_indicators)}."
         suggested_response = "⚠️ **ALERTA DE SEGURANÇA** ⚠️\n\n**AÇÃO RECOMENDADA:**\n1. **NÃO RESPONDER** a este email.\n2. Encaminhar imediatamente para a equipe de segurança (security@empresa.com).\n3. Bloquear o remetente.\n4. Não clicar em nenhum link ou anexo."
         confidence = 0.95
