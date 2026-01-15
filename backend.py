@@ -102,7 +102,7 @@ def classify_with_ai(email_content: str, api_key: str) -> Tuple[str, float, str]
         )
         
         response = client.chat.completions.create(
-            model="google/gemini-2.0-flash-exp:free",
+            model="deepseek/deepseek-r1-0528:free",
             messages=[
                 {
                     "role": "system",
