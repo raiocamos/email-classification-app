@@ -155,4 +155,5 @@ Este projeto foi desenvolvido para fins educacionais como parte do Desafio de Cl
 
 ## 👤 Autor
 
-Desenvolvido por [Seu Nome] - 2025
+Desenvolvido por raiocamos - 2026
+
