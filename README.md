@@ -149,7 +149,7 @@ Seu app estará disponível em: `https://seu-app.vercel.app`
 
 ## 📄 Licença
 
-Este projeto foi desenvolvido para fins educacionais como parte do Desafio de Classificação de Emails.
+Este projeto foi desenvolvido para fins educacionais como parte de um Desafio para aplicação e uma Vaga.
 
 ---
 
