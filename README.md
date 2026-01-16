@@ -72,7 +72,7 @@ python app.py
 
 6. **Acesse no navegador**
 ```
-http://127.0.0.1:5000
+[https://email-classification-97qzjqsb5-raiocamos-projects.vercel.app/]
 ```
 
 ---
